@@ -1,0 +1,7 @@
+com\pricecomparator\ProductLoader.class
+com\pricecomparator\BasketOptimizer.class
+com\pricecomparator\MarketDataLoader.class
+com\pricecomparator\Product.class
+com\pricecomparator\Discount.class
+com\pricecomparator\DiscountLoader.class
+com\pricecomparator\App.class
