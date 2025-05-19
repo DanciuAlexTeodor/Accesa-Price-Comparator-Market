@@ -20,7 +20,6 @@ public class NewestDiscounts {
         
         Map<String, List<Discount>> storeDiscounts = marketDataRepository.getValidDiscountsForDate(todayDate);
         
-        // Keep only the discounts that start exactly on the requested date
         storeDiscounts.forEach((storeName, discounts) -> {
             // This filter keeps ONLY discounts that start exactly on todayDate
             discounts.removeIf(discount -> !discount.getFromDate().equals(todayDate));

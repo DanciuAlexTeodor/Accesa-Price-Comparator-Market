@@ -9,38 +9,34 @@ import com.pricecomparator.service.BestDiscounts;
 import com.pricecomparator.service.NewestDiscounts;
 import com.pricecomparator.repository.MarketDataRepository;
 import com.pricecomparator.repository.ProductRepository;
+import com.pricecomparator.repository.AlertRepository;
 import com.pricecomparator.repository.DiscountRepository;
 import com.pricecomparator.loader.MarketDataLoader;
 import com.pricecomparator.model.Product;
 import com.pricecomparator.model.Discount;
+import com.pricecomparator.model.PriceAlert;
+import com.pricecomparator.service.PriceAlertService;
 
 public class App {
 
     private static final int OPTION_OPTIMIZE_BASKET = 1;
     private static final int OPTION_BEST_DISCOUNTS = 2;
     private static final int OPTION_NEWEST_DISCOUNTS = 3;
+    private static final int OPTION_PRICE_ALERT = 4;
     private static final int OPTION_EXIT = 0;
 
     private static final Map<Integer, List<String>> PREDEFINED_BASKETS = new LinkedHashMap<>();
     private static final Map<Integer,String> PREDEFINED_DATES = new LinkedHashMap<>();
     private static final Map<Integer,String> PREDEFINED_STORES = new LinkedHashMap<>();
 
-    private static final MarketDataRepository marketDataRepository;
-    private static final BasketOptimizer basketOptimizer;
-    private static final BestDiscounts bestDiscounts;
-    private static final NewestDiscounts newestDiscounts;
-
+    private static MarketDataRepository marketDataRepository;
+    private static BasketOptimizer basketOptimizer;
+    private static BestDiscounts bestDiscounts;
+    private static NewestDiscounts newestDiscounts;
+    private static PriceAlertService priceAlertService;
+    private static String currentDate;
+    
     static {
-        Map<String, List<Product>> products = MarketDataLoader.loadAllProductForDate("2099-12-31");
-        Map<String, List<Discount>> discounts = MarketDataLoader.loadAllDiscountsForDate("2099-12-31");
-        marketDataRepository = new MarketDataRepository(
-            new ProductRepository(products),
-            new DiscountRepository(discounts)
-        );
-        basketOptimizer = new BasketOptimizer(marketDataRepository);
-        bestDiscounts = new BestDiscounts(marketDataRepository);
-        newestDiscounts = new NewestDiscounts(marketDataRepository);
-
         PREDEFINED_BASKETS.put(1, List.of("P001", "P020", "P028", "P034"));
         PREDEFINED_BASKETS.put(2, List.of("P031", "P040", "P008"));
         PREDEFINED_BASKETS.put(3, List.of("P021", "P043", "P026", "P046"));
@@ -60,6 +56,20 @@ public class App {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        
+        // Get today's date at startup
+        System.out.println("Welcome to Price Comparator!");
+        currentDate = getDesiredDate(scanner);
+        
+        if (currentDate == null || currentDate.isEmpty()) {
+            System.out.println("Valid date is required to start the application. Exiting...");
+            return;
+        }
+        
+        System.out.println("Loading data for date: " + currentDate);
+        
+        // Initialize repositories with the specified date
+        initializeRepositories(currentDate);
 
         while (true) {
             printMenu();
@@ -77,6 +87,10 @@ public class App {
                     System.out.println("Showing newest discounts...");
                     handleNewestDiscounts(scanner);
                     break;
+                case OPTION_PRICE_ALERT:
+                    handlePriceAlerts(scanner);
+                    break;
+                
                 case OPTION_EXIT:
                     System.out.println("Goodbye!");
                     return;
@@ -85,12 +99,28 @@ public class App {
             }
         }
     }
+    
+    private static void initializeRepositories(String date) {
+        Map<String, List<Product>> products = MarketDataLoader.loadAllProductForDate(date);
+        Map<String, List<Discount>> discounts = MarketDataLoader.loadAllDiscountsForDate(date);
+        marketDataRepository = new MarketDataRepository(
+            new ProductRepository(products),
+            new DiscountRepository(discounts)
+        );
+        basketOptimizer = new BasketOptimizer(marketDataRepository);
+        bestDiscounts = new BestDiscounts(marketDataRepository);
+        newestDiscounts = new NewestDiscounts(marketDataRepository);
+        
+        AlertRepository alertRepository = new AlertRepository();
+        priceAlertService = new PriceAlertService(alertRepository, marketDataRepository);
+    }
 
     private static void printMenu() {
         System.out.println("\n==== Price Comparator Menu ====");
         System.out.println(OPTION_OPTIMIZE_BASKET + ") Split basket into cheapest shopping lists");
         System.out.println(OPTION_BEST_DISCOUNTS + ") Show top discounts");
         System.out.println(OPTION_NEWEST_DISCOUNTS + ") Show newest discounts");
+        System.out.println(OPTION_PRICE_ALERT + ") View Price Alerts");
         System.out.println(OPTION_EXIT + ") Exit");
     }
 
@@ -129,7 +159,7 @@ public class App {
     }
 
     private static String getDesiredDate(Scanner scanner) { 
-        scanner.nextLine(); 
+            scanner.nextLine(); 
        
             System.out.print("Enter today's date (YYYY-MM-DD): ");
             String customDate = scanner.nextLine().trim();
@@ -159,11 +189,7 @@ public class App {
         basket = getDesiredBasket(scanner);
         if(basket == null || basket.isEmpty()) return;
         
-        String date;
-        date = getDesiredDate(scanner);
-        if(date == null || date.isEmpty()) return;
-
-        basketOptimizer.optimizeBasketSplit(basket, date);
+        basketOptimizer.optimizeBasketSplit(basket, currentDate);
     }
 
     private static String getDesiredStore(Scanner scanner)
@@ -190,26 +216,100 @@ public class App {
         String store = getDesiredStore(scanner);
         if (store == null || store.isEmpty()) return;
 
-        String todayDate = getDesiredDate(scanner);
-        if (todayDate == null || todayDate.isEmpty()) return;
-
-
-        newestDiscounts.showNewestDiscounts(store, todayDate);
-
+        newestDiscounts.showNewestDiscounts(store, currentDate);
     }
 
     private static void handleBestDiscounts(Scanner scanner)
     {
-        String date = getDesiredDate(scanner);
-        if (date == null || date.isEmpty()) return;
-
         String store = getDesiredStore(scanner);
         if (store == null || store.isEmpty()) return;
 
         int numberOfOffers = readInt(scanner, "Enter number of offers:");
 
-        bestDiscounts.showBestDiscounts(store, date, numberOfOffers);
+        bestDiscounts.showBestDiscounts(store, currentDate, numberOfOffers);
+    }
+
+    private static void handlePriceAlerts(Scanner scanner) {
+        System.out.println("\n==== Price Alerts ====");
+        System.out.println("1) Create new alert");
+        System.out.println("2) View active alerts");
+        System.out.println("3) Check alerts");
+        System.out.println("0) Back to main menu");
+        
+        int choice = readInt(scanner, "Your choice: ");
+        
+        switch (choice) {
+            case 1:
+                createPriceAlert(scanner);
+                break;
+            case 2:
+                viewActiveAlerts();
+                break;
+            case 3:
+                checkAlerts(scanner);
+                break;
+            case 0:
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+    }
+
+    private static void createPriceAlert(Scanner scanner) {
+        scanner.nextLine(); 
+        System.out.print("Enter product ID: ");
+        String productId = scanner.nextLine().trim();
+        
+        System.out.print("Enter target price: ");
+        String priceInput = scanner.nextLine().trim();
+        double targetPrice;
+        
+        try {
+            targetPrice = Double.parseDouble(priceInput);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid price format. Please enter a valid number.");
+            return;
+        }
+        
+        // Find product name from any store
+        String productName = "Unknown Product";
+        for (String store : PREDEFINED_STORES.values()) {
+            if (store.equals("All stores")) continue;
+            
+            Product product = marketDataRepository.getProduct(store, productId);
+            if (product != null) {
+                productName = product.getName();
+                break;
+            }
+        }
+        
+        priceAlertService.createAlert(productId, productName, targetPrice, "user1");
+    }
+
+    private static void viewActiveAlerts() {
+        List<PriceAlert> alerts = priceAlertService.getActiveAlerts();
+        
+        if (alerts.isEmpty()) {
+            System.out.println("No active alerts.");
+            return;
+        }
+        
+        System.out.println("\n==== Active Price Alerts ====");
+        for (int i = 0; i < alerts.size(); i++) {
+            PriceAlert alert = alerts.get(i);
+            System.out.printf("%d) %s (ID: %s) - Target price: %.2f\n", 
+                i+1, alert.getProductName(), alert.getProductId(), alert.getTargetPrice());
+        }
+    }
+
+    private static void checkAlerts(Scanner scanner) {
+        List<PriceAlert> triggered = priceAlertService.checkAlerts(currentDate);
+        
+        if (triggered.isEmpty()) {
+            System.out.println("No price alerts triggered for " + currentDate);
+        }
     }
 }
+
 
 

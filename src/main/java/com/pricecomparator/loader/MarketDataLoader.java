@@ -18,10 +18,40 @@ public class MarketDataLoader {
         File[] files = folder.listFiles();
         if (files == null) return storeProducts;
 
-        Map<String, File> latestFileForStore = new HashMap<>();
-        Map<String, LocalDate> latestDateForStore = new HashMap<>();
+        // First find the most recent date before or equal to the target date
         LocalDate targetDate = LocalDate.parse(date);
-
+        LocalDate mostRecentDate = null;
+        
+        System.out.println("Loading products for " + targetDate);
+        
+        // Find the most recent date that has product files
+        for (File file : files) {
+            String fileName = file.getName();
+            if (fileName.endsWith(".csv") && !fileName.contains("discounts")) {
+                String[] parts = fileName.replace(".csv", "").split("_");
+                if (parts.length < 2) continue;
+                String fileDateStr = parts[1];
+                try {
+                    LocalDate fileDate = LocalDate.parse(fileDateStr);
+                    if (!fileDate.isAfter(targetDate)) {
+                        if (mostRecentDate == null || fileDate.isAfter(mostRecentDate)) {
+                            mostRecentDate = fileDate;
+                        }
+                    }
+                } catch (Exception e) {
+                    // Ignore files with invalid date format
+                }
+            }
+        }
+        
+        if (mostRecentDate == null) {
+            System.out.println("No product files found for date " + targetDate);
+            return storeProducts;
+        }
+        
+        System.out.println("Using products from date: " + mostRecentDate + " (most recent before " + targetDate + ")");
+        
+        // Now only load files from the most recent date
         for (File file : files) {
             String fileName = file.getName();
             if (fileName.endsWith(".csv") && !fileName.contains("discounts")) {
@@ -33,24 +63,19 @@ public class MarketDataLoader {
                 String fileDateStr = parts[1];
                 try {
                     LocalDate fileDate = LocalDate.parse(fileDateStr);
-                    if (!fileDate.isAfter(targetDate)) {
-                        if (!latestDateForStore.containsKey(storeName) || fileDate.isAfter(latestDateForStore.get(storeName))) {
-                            latestDateForStore.put(storeName, fileDate);
-                            latestFileForStore.put(storeName, file);
-                        }
+                    
+                    // Only include files from the most recent date
+                    if (fileDate.equals(mostRecentDate)) {
+                        System.out.println("  Loading products for " + storeName + " from file: " + fileName);
+                        List<Product> products = ProductLoader.loadFromCSV(file.getPath());
+                        storeProducts.put(storeName, products);
                     }
                 } catch (Exception e) {
                     // Ignore files with invalid date format
                 }
             }
         }
-
-        for (Map.Entry<String, File> entry : latestFileForStore.entrySet()) {
-            String storeName = entry.getKey();
-            File file = entry.getValue();
-            List<Product> products = ProductLoader.loadFromCSV(file.getPath());
-            storeProducts.put(storeName, products);
-        }
+        
         return storeProducts;
     } 
 
@@ -63,13 +88,43 @@ public class MarketDataLoader {
 
         if(files == null) return storeDiscounts;
 
+        // First find the most recent date before or equal to the target date
         LocalDate targetDate = LocalDate.parse(date);
-
-        for(File file : files)
-        {
+        LocalDate mostRecentDate = null;
+        
+        System.out.println("Loading discounts for " + targetDate);
+        
+        // Find the most recent date that has discount files
+        for (File file : files) {
             String fileName = file.getName();
-            if(fileName.contains("discounts") && fileName.endsWith(".csv"))
-            {
+            if (fileName.contains("discounts") && fileName.endsWith(".csv")) {
+                String[] parts = fileName.replace(".csv", "").split("_");
+                if (parts.length < 3) continue;
+                String fileDateStr = parts[2];
+                try {
+                    LocalDate fileDate = LocalDate.parse(fileDateStr);
+                    if (!fileDate.isAfter(targetDate)) {
+                        if (mostRecentDate == null || fileDate.isAfter(mostRecentDate)) {
+                            mostRecentDate = fileDate;
+                        }
+                    }
+                } catch (Exception e) {
+                    // Ignore files with invalid date format
+                }
+            }
+        }
+        
+        if (mostRecentDate == null) {
+            System.out.println("No discount files found for date " + targetDate);
+            return storeDiscounts;
+        }
+        
+        System.out.println("Using discounts from date: " + mostRecentDate + " (most recent before " + targetDate + ")");
+
+        // Now only load files from the most recent date
+        for (File file : files) {
+            String fileName = file.getName();
+            if (fileName.contains("discounts") && fileName.endsWith(".csv")) {
                 String[] parts = fileName.replace(".csv", "").split("_");
                 if (parts.length < 3) continue;
                 String storeName = parts[0];
@@ -79,8 +134,12 @@ public class MarketDataLoader {
                 try {
                     LocalDate fileDate = LocalDate.parse(fileDateStr);
                     
-                    List<Discount> discounts = DiscountLoader.loadFromCSV(file.getPath());
-                    storeDiscounts.computeIfAbsent(storeName, k -> new ArrayList<>()).addAll(discounts);
+                    // Only include files from the most recent date
+                    if (fileDate.equals(mostRecentDate)) {
+                        System.out.println("  Loading discounts for " + storeName + " from file: " + fileName);
+                        List<Discount> discounts = DiscountLoader.loadFromCSV(file.getPath());
+                        storeDiscounts.put(storeName, discounts);
+                    }
                 } catch (Exception e) {
                     // Ignore files with invalid date format
                 }
