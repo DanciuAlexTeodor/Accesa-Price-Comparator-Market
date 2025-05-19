@@ -16,6 +16,7 @@ import com.pricecomparator.model.Product;
 import com.pricecomparator.model.Discount;
 import com.pricecomparator.model.PriceAlert;
 import com.pricecomparator.service.PriceAlertService;
+import com.pricecomparator.service.ValueUnit;
 
 public class App {
 
@@ -23,6 +24,7 @@ public class App {
     private static final int OPTION_BEST_DISCOUNTS = 2;
     private static final int OPTION_NEWEST_DISCOUNTS = 3;
     private static final int OPTION_PRICE_ALERT = 4;
+    private static final int OPTION_VALUE_PER_UNIT = 5;
     private static final int OPTION_EXIT = 0;
 
     private static final Map<Integer, List<String>> PREDEFINED_BASKETS = new LinkedHashMap<>();
@@ -34,6 +36,7 @@ public class App {
     private static BestDiscounts bestDiscounts;
     private static NewestDiscounts newestDiscounts;
     private static PriceAlertService priceAlertService;
+    private static ValueUnit valuePerUnit;
     private static String currentDate;
     
     static {
@@ -90,7 +93,9 @@ public class App {
                 case OPTION_PRICE_ALERT:
                     handlePriceAlerts(scanner);
                     break;
-                
+                case OPTION_VALUE_PER_UNIT:
+                    handleValuePerUnit(scanner);
+                    break;
                 case OPTION_EXIT:
                     System.out.println("Goodbye!");
                     return;
@@ -110,7 +115,8 @@ public class App {
         basketOptimizer = new BasketOptimizer(marketDataRepository);
         bestDiscounts = new BestDiscounts(marketDataRepository);
         newestDiscounts = new NewestDiscounts(marketDataRepository);
-        
+        valuePerUnit = new ValueUnit(marketDataRepository);
+
         AlertRepository alertRepository = new AlertRepository();
         priceAlertService = new PriceAlertService(alertRepository, marketDataRepository);
     }
@@ -121,6 +127,7 @@ public class App {
         System.out.println(OPTION_BEST_DISCOUNTS + ") Show top discounts");
         System.out.println(OPTION_NEWEST_DISCOUNTS + ") Show newest discounts");
         System.out.println(OPTION_PRICE_ALERT + ") View Price Alerts");
+        System.out.println(OPTION_VALUE_PER_UNIT + ") Show best value per unit");
         System.out.println(OPTION_EXIT + ") Exit");
     }
 
@@ -308,6 +315,14 @@ public class App {
         if (triggered.isEmpty()) {
             System.out.println("No price alerts triggered for " + currentDate);
         }
+    }
+
+    private static void handleValuePerUnit(Scanner scanner) {
+        scanner.nextLine();
+        System.out.print("Enter product ID: ");
+        String productId = scanner.nextLine().trim();
+
+        valuePerUnit.getBestValuePerUnit(productId, currentDate);
     }
 }
 
