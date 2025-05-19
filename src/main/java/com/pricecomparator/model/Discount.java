@@ -44,4 +44,12 @@ public class Discount {
     public String getProductId() {
         return productId;
     }
+
+    public String getFromDate() {
+        return fromDate;
+    }
+
+    public String getToDate() {
+        return toDate;
+    }
 }

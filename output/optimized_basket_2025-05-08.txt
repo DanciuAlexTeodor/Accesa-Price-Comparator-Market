@@ -1,13 +1,13 @@
-🛒 Optimized Basket Split for 2025-05-08:
+Optimized Basket Split for 2025-05-03:
 
 
 Lidl Shopping List:
-- banane: 6,00 RON
-- piper negru măcinat: 6,05 RON
-- zahăr tos: 4,30 RON
-- hârtie igienică 3 straturi: 16,92 RON (-10%)
-Subtotal: 33,27 RON
+- banane: 6,10 RON
+- piper negru măcinat: 6,00 RON
+- zahăr tos: 4,40 RON
+- hârtie igienică 3 straturi: 16,25 RON (-14%)
+Subtotal: 32,75 RON
 
-💰 Original total (no discounts): 35,15 RON
-✅ Optimized total: 33,27 RON
-🎉 Total money saved: 1,88 RON
+Original total (no discounts): 35,40 RON
+Optimized total: 32,75 RON
+Total money saved: 2,65 RON
