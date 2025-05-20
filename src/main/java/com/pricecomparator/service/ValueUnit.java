@@ -39,14 +39,23 @@ public class ValueUnit {
         
         System.out.println("Value comparison for " + productName);
         
+
         for (String store : storeProducts.keySet()) {
             for (Product product : storeProducts.get(store)) {
                 if (product.getName().equals(productName)) {
                     double valueUnitPrice = calculateValueUnitPrice(product);
                     valueUnitPrices.put(store, valueUnitPrice);
                     
-                    System.out.printf("Store: %s, %s - %.2f RON per standard unit%n", 
-                        store, product.getName(), valueUnitPrice);
+                    String unit = product.getUnit();
+                    String numeUnitate = "";
+                    if (WEIGHT_SMALL_UNITS.contains(unit)) {
+                        numeUnitate = "kg";
+                    } else if (VOLUME_SMALL_UNITS.contains(unit)) {
+                        numeUnitate = "l";
+                    }
+
+                    System.out.printf("Store: %s, %s - %.2f RON per %s %n" , 
+                        store, product.getName(), valueUnitPrice, numeUnitate);
                 }
             }
         }

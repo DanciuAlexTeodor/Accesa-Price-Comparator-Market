@@ -2,12 +2,11 @@ package com.pricecomparator.repository;
 
 import com.pricecomparator.model.Product;
 import com.pricecomparator.model.Discount;
+import com.pricecomparator.loader.MarketDataLoader;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 public class MarketDataRepository {
     private final ProductRepository productRepository;
@@ -17,38 +16,58 @@ public class MarketDataRepository {
         this.productRepository = productRepository;
         this.discountRepository = discountRepository;
     }
+    
+    /**
+     * Creates a MarketDataRepository by loading all data from files
+     */
+    public static MarketDataRepository createFromFiles() {
+        Map<String, Map<LocalDate, List<Product>>> productData = MarketDataLoader.loadAllProductFiles();
+        Map<String, Map<LocalDate, List<Discount>>> discountData = MarketDataLoader.loadAllDiscountFiles();
+        
+        return new MarketDataRepository(
+            new ProductRepository(productData),
+            new DiscountRepository(discountData)
+        );
+    }
 
     public Map<String, List<Product>> getProductsForDate(String date) {
-        return productRepository.getAllStoreProducts();
+        return productRepository.getProductsForDate(date);
+    }
+    
+    public Map<String, List<Product>> getAllProductsBeforeDate(String date) {
+        return productRepository.getAllProductsBeforeDate(date);
+    }
+
+    public Map<String, List<Discount>> getDiscountsForDate(String date) {
+        return discountRepository.getDiscountsForDate(date);
+    }
+    
+    public Map<String, List<Discount>> getAllDiscountsBeforeDate(String date) {
+        return discountRepository.getAllDiscountsBeforeDate(date);
     }
 
     public Map<String, List<Discount>> getValidDiscountsForDate(String date) {
-        Map<String, List<Discount>> allDiscounts = discountRepository.getAllStoreDiscounts();
-        Map<String, List<Discount>> filteredDiscounts = new HashMap<>();
-        LocalDate targetDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-
-        // Filter discounts by date validity (must be active on the target date)
-        allDiscounts.forEach((store, discounts) -> {
-            List<Discount> validDiscounts = discounts.stream()
-                .filter(discount -> {
-                    LocalDate fromDate = LocalDate.parse(discount.getFromDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                    LocalDate toDate = LocalDate.parse(discount.getToDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                    
-                    // Discount is valid if target date is between fromDate and toDate (inclusive)
-                    return !targetDate.isBefore(fromDate) && !targetDate.isAfter(toDate);
-                })
-                .collect(Collectors.toList());
-                
-            if (!validDiscounts.isEmpty()) {
-                filteredDiscounts.put(store, validDiscounts);
+        Map<String, List<Discount>> result = new HashMap<>();
+        
+        // For each store, get active discounts on the target date
+        for (String store : getDiscountsForDate(date).keySet()) {
+            List<Discount> activeDiscounts = discountRepository.getActiveDiscounts(store, date);
+            if (!activeDiscounts.isEmpty()) {
+                result.put(store, activeDiscounts);
             }
-        });
-
-        return filteredDiscounts;
+        }
+        
+        return result;
     }
 
+    public Product getProduct(String store, String productId, String date) {
+        return productRepository.findProductById(store, productId, date);
+    }
+    
     public Product getProduct(String store, String productId) {
-        return productRepository.findProductById(store, productId);
+        // This is for backward compatibility - using current date
+        LocalDate now = LocalDate.now();
+        return productRepository.findProductById(store, productId, now.toString());
     }
 
     public Discount getActiveDiscount(String store, String productId, String date) {

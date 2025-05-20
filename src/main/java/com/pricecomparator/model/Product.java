@@ -9,6 +9,7 @@ public class Product {
     private String unit;
     private double price;
     private String currency;
+    private String datePosted; // Date when this product price was recorded (from CSV filename)
 
     public Product(String id, String name, String category, String brand, double quantity, String unit, double price, String currency) {
         this.id = id;
@@ -19,8 +20,28 @@ public class Product {
         this.unit = unit;
         this.price = price;
         this.currency = currency;
+        this.datePosted = null; // Will be set based on source file date
     }
 
+    public Product(String id, String name, String category, String brand, double quantity, String unit, double price, String currency, String datePosted) {
+        this.id = id;
+        this.name = name;
+        this.category = category;
+        this.brand = brand;
+        this.quantity = quantity;
+        this.unit = unit;
+        this.price = price;
+        this.currency = currency;
+        this.datePosted = datePosted;
+    }
+
+    public String getDatePosted() {
+        return datePosted;
+    }
+
+    public void setDatePosted(String datePosted) {
+        this.datePosted = datePosted;
+    }
 
     public String getId() {
         return id;
@@ -88,7 +109,8 @@ public class Product {
 
     @Override
     public String toString() {
-        return name + " (" + brand + ") - " + quantity + " " + unit + " at " + price + " " + currency;
+        return name + " (" + brand + ") - " + quantity + " " + unit + " at " + price + " " + currency +
+               (datePosted != null ? " (posted on " + datePosted + ")" : "");
     }
 
 }

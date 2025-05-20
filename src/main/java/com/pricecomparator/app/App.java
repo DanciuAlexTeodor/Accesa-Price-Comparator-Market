@@ -16,6 +16,7 @@ import com.pricecomparator.model.Product;
 import com.pricecomparator.model.Discount;
 import com.pricecomparator.model.PriceAlert;
 import com.pricecomparator.service.PriceAlertService;
+import com.pricecomparator.service.PriceDataService;
 import com.pricecomparator.service.ValueUnit;
 
 public class App {
@@ -25,6 +26,7 @@ public class App {
     private static final int OPTION_NEWEST_DISCOUNTS = 3;
     private static final int OPTION_PRICE_ALERT = 4;
     private static final int OPTION_VALUE_PER_UNIT = 5;
+    private static final int OPTION_DATA_POINTS_ANALYSIS = 6;
     private static final int OPTION_EXIT = 0;
 
     private static final Map<Integer, List<String>> PREDEFINED_BASKETS = new LinkedHashMap<>();
@@ -96,6 +98,9 @@ public class App {
                 case OPTION_VALUE_PER_UNIT:
                     handleValuePerUnit(scanner);
                     break;
+                case OPTION_DATA_POINTS_ANALYSIS:
+                    handleDataPointsAnalysis(scanner);
+                    break;
                 case OPTION_EXIT:
                     System.out.println("Goodbye!");
                     return;
@@ -106,12 +111,9 @@ public class App {
     }
     
     private static void initializeRepositories(String date) {
-        Map<String, List<Product>> products = MarketDataLoader.loadAllProductForDate(date);
-        Map<String, List<Discount>> discounts = MarketDataLoader.loadAllDiscountsForDate(date);
-        marketDataRepository = new MarketDataRepository(
-            new ProductRepository(products),
-            new DiscountRepository(discounts)
-        );
+        // Use the new factory method to create MarketDataRepository from files
+        marketDataRepository = MarketDataRepository.createFromFiles();
+        
         basketOptimizer = new BasketOptimizer(marketDataRepository);
         bestDiscounts = new BestDiscounts(marketDataRepository);
         newestDiscounts = new NewestDiscounts(marketDataRepository);
@@ -128,6 +130,7 @@ public class App {
         System.out.println(OPTION_NEWEST_DISCOUNTS + ") Show newest discounts");
         System.out.println(OPTION_PRICE_ALERT + ") View Price Alerts");
         System.out.println(OPTION_VALUE_PER_UNIT + ") Show best value per unit");
+        System.out.println(OPTION_DATA_POINTS_ANALYSIS + ") Show data points for a specific product");
         System.out.println(OPTION_EXIT + ") Exit");
     }
 
@@ -324,7 +327,67 @@ public class App {
 
         valuePerUnit.getBestValuePerUnit(productId, currentDate);
     }
-}
 
+    private static void handleDataPointsAnalysis(Scanner scanner) {
+        System.out.println("\n==== Data Points Analysis ====");
+        System.out.println("1) Show data points for a specific product");
+        System.out.println("0) Back to main menu");
+
+        int choice = readInt(scanner, "Your choice: ");
+
+        switch (choice) {
+            case 1:
+                showDataPointsForProduct(scanner);
+                break;
+            case 0:
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+    }
+
+    private static void showDataPointsForProduct(Scanner scanner) {
+        scanner.nextLine();
+        System.out.print("Enter product ID: ");
+        String productId = scanner.nextLine().trim();
+        
+        // Initialize filters as null
+        String categoryFilter = null;
+        String brandFilter = null;
+        String storeFilter = null;
+        
+        // Ask for filters
+        System.out.println("\nDo you want to apply filters? (Y/N)");
+        String filterChoice = scanner.nextLine().trim().toUpperCase();
+        
+        if (filterChoice.equals("Y")) {
+            System.out.println("Enter filter values (leave blank for no filter):");
+            
+            System.out.print("Category filter: ");
+            String category = scanner.nextLine().trim();
+            if (!category.isEmpty()) {
+                categoryFilter = category;
+            }
+            
+            System.out.print("Brand filter: ");
+            String brand = scanner.nextLine().trim();
+            if (!brand.isEmpty()) {
+                brandFilter = brand;
+            }
+            
+            System.out.print("Store filter: ");
+            String store = scanner.nextLine().trim();
+            if (!store.isEmpty()) {
+                storeFilter = store;
+            }
+        }
+        
+        // Create service and show data points with optional filters
+        PriceDataService priceDataService = new PriceDataService();
+        priceDataService.showDataPointsForProduct(productId, currentDate, categoryFilter, brandFilter, storeFilter);
+    }
+        
+    
+}
 
 
