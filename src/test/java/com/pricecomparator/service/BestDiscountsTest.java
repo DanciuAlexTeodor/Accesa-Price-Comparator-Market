@@ -26,7 +26,7 @@ class BestDiscountsTest {
         when(d1.getDiscountPercent()).thenReturn(20);
         Discount d2 = mock(Discount.class);
         when(d2.getDiscountPercent()).thenReturn(10);
-        Map<String, List<Discount>> data = Map.of("Kaufland", List.of(d1, d2));
+        Map<String, List<Discount>> data = Map.of("Kaufland", new ArrayList<>(List.of(d1, d2)));
         when(repo.getValidDiscountsForDate(date)).thenReturn(data);
         bestDiscounts.showBestDiscounts("Kaufland", date, 2);
     }
@@ -38,8 +38,8 @@ class BestDiscountsTest {
         Discount d2 = mock(Discount.class);
         when(d2.getDiscountPercent()).thenReturn(10);
         Map<String, List<Discount>> data = Map.of(
-                "Kaufland", List.of(d1),
-                "Lidl", List.of(d2)
+                "Kaufland", new ArrayList<>(List.of(d1)),
+                "Lidl", new ArrayList<>(List.of(d2))
         );
         when(repo.getValidDiscountsForDate(date)).thenReturn(data);
         bestDiscounts.showBestDiscounts("All stores", date, 2);
@@ -47,7 +47,7 @@ class BestDiscountsTest {
 
     @Test
     void testShowBestDiscounts_noDiscounts() {
-        Map<String, List<Discount>> data = Map.of("Kaufland", List.of());
+        Map<String, List<Discount>> data = Map.of("Kaufland", new ArrayList<>());
         when(repo.getValidDiscountsForDate(date)).thenReturn(data);
         bestDiscounts.showBestDiscounts("Kaufland", date, 2);
     }
