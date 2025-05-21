@@ -12,7 +12,7 @@ public class ValueUnit {
 
     private final MarketDataRepository marketDataRepository;
     
-    // Constants for unit conversion
+    //Some sets for unit conversion (bcz not all units are equal)
     private static final Set<String> VOLUME_SMALL_UNITS = Set.of("ml");
     private static final Set<String> VOLUME_LARGE_UNITS = Set.of("l");
     private static final Set<String> WEIGHT_SMALL_UNITS = Set.of("g");
@@ -24,11 +24,14 @@ public class ValueUnit {
     }
 
    
+    // Main method to get the best value per unit for a product
     public Map<String, Double> getBestValuePerUnit(String productId, String currentDate) {
         Map<String, List<Product>> storeProducts = marketDataRepository.getProductsForDate(currentDate);
         Map<String, Double> valueUnitPrices = new HashMap<>();
+        Map<String, String> storeUnits = new HashMap<>(); // Store -> unit (kg/l)
         String productName = "";
 
+        // Try to find the product name by ID
         for (String store : storeProducts.keySet()) {
             for (Product product : storeProducts.get(store)) {
                 if (product.getId().equals(productId)) {
@@ -40,6 +43,7 @@ public class ValueUnit {
         System.out.println("Value comparison for " + productName);
         
 
+        // Go through all stores and calculate value per unit
         for (String store : storeProducts.keySet()) {
             for (Product product : storeProducts.get(store)) {
                 if (product.getName().equals(productName)) {
@@ -48,11 +52,14 @@ public class ValueUnit {
                     
                     String unit = product.getUnit();
                     String numeUnitate = "";
-                    if (WEIGHT_SMALL_UNITS.contains(unit)) {
+                    if (WEIGHT_SMALL_UNITS.contains(unit) || WEIGHT_LARGE_UNITS.contains(unit)) {
                         numeUnitate = "kg";
-                    } else if (VOLUME_SMALL_UNITS.contains(unit)) {
+                    } else if (VOLUME_SMALL_UNITS.contains(unit) || VOLUME_LARGE_UNITS.contains(unit)) {
                         numeUnitate = "l";
+                    } else if (COUNT_UNITS.contains(unit)) {
+                        numeUnitate = unit; // will be 'buc' or 'role'
                     }
+                    storeUnits.put(store, numeUnitate); // Track unit for this store
 
                     System.out.printf("Store: %s, %s - %.2f RON per %s %n" , 
                         store, product.getName(), valueUnitPrice, numeUnitate);
@@ -70,9 +77,9 @@ public class ValueUnit {
                 .orElse(null);
                 
             if (bestStore != null) {
-              
-                System.out.printf("Best value: %s (%.2f RON per standard unit)%n", 
-                    bestStore, valueUnitPrices.get(bestStore));
+                String bestUnit = storeUnits.getOrDefault(bestStore, "standard unit");
+                System.out.printf("Best value: %s (%.2f RON per %s)%n", 
+                    bestStore, valueUnitPrices.get(bestStore), bestUnit);
             }
         }
         
@@ -80,12 +87,14 @@ public class ValueUnit {
     }
     
    
+    // Calculates the price per standard unit (e.g., per kg, per L)
     private double calculateValueUnitPrice(Product product) {
         double price = product.getPrice();
         double quantity = product.getQuantity();
         String unit = product.getUnit();
         
         if (WEIGHT_SMALL_UNITS.contains(unit) || VOLUME_SMALL_UNITS.contains(unit)) {
+            // Convert grams/milliliters to kg/L
             return price / quantity * 1000;
         } else if (WEIGHT_LARGE_UNITS.contains(unit) || VOLUME_LARGE_UNITS.contains(unit) || 
                   COUNT_UNITS.contains(unit)) {

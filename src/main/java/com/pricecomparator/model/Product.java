@@ -9,7 +9,7 @@ public class Product {
     private String unit;
     private double price;
     private String currency;
-    private String datePosted; // Date when this product price was recorded (from CSV filename)
+    private String datePosted; // Date when this product price was recorded
 
     public Product(String id, String name, String category, String brand, double quantity, String unit, double price, String currency) {
         this.id = id;

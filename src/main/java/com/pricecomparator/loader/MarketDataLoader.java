@@ -44,7 +44,7 @@ public class MarketDataLoader {
                     Map<LocalDate, List<Product>> dateMap = storeProductsByDate.computeIfAbsent(storeName, k -> new HashMap<>());
                     dateMap.put(fileDate, products);
                     
-                    System.out.println("Loaded " + products.size() + " products for " + storeName + " from " + fileName);
+                    //System.out.println("Loaded " + products.size() + " products for " + storeName + " from " + fileName);
                 } catch (Exception e) {
                     System.out.println("Error loading products from " + fileName + ": " + e.getMessage());
                 }
@@ -87,7 +87,7 @@ public class MarketDataLoader {
                     Map<LocalDate, List<Discount>> dateMap = storeDiscountsByDate.computeIfAbsent(storeName, k -> new HashMap<>());
                     dateMap.put(fileDate, discounts);
                     
-                    System.out.println("Loaded " + discounts.size() + " discounts for " + storeName + " from " + fileName);
+                    //System.out.println("Loaded " + discounts.size() + " discounts for " + storeName + " from " + fileName);
                 } catch (Exception e) {
                     System.out.println("Error loading discounts from " + fileName + ": " + e.getMessage());
                 }
