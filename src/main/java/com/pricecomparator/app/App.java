@@ -99,7 +99,6 @@ public class App {
                     handleBestDiscounts(scanner);
                     break;
                 case OPTION_NEWEST_DISCOUNTS:
-                    System.out.println("Showing newest discounts...");
                     handleNewestDiscounts(scanner);
                     break;
                 case OPTION_PRICE_ALERT:
@@ -205,41 +204,42 @@ public class App {
     }
 
     private static void handleBasketOptimization(Scanner scanner) {
-        // New submenu for basket management
-        System.out.println("\n==== Basket Management ====");
-        System.out.println("1) Optimize basket");
-        System.out.println("2) Save basket");
-        System.out.println("3) Load basket");
-        System.out.println("4) Clear basket");
-        System.out.println("5) View all saved baskets");
-        System.out.println("6) Modify a saved basket");
-        System.out.println("0) Back to main menu");
-        
-        int choice = readInt(scanner, "Your choice: ");
-        
-        switch (choice) {
-            case 1:
-                optimizeBasket(scanner);
-                break;
-            case 2:
-                saveBasket(scanner);
-                break;
-            case 3:
-                loadBasket(scanner);
-                break;
-            case 4:
-                clearBasket();
-                break;
-            case 5:
-                viewAllSavedBaskets();
-                break;
-            case 6:
-                modifySavedBasket(scanner);
-                break;
-            case 0:
-                return;
-            default:
-                System.out.println("Invalid option.");
+        boolean done = false;
+        while (!done) {
+            System.out.println("\n==== Basket Management ====");
+            System.out.println("1) Optimize basket");
+            System.out.println("2) Save basket");
+            System.out.println("3) Load basket");
+            System.out.println("4) Clear basket");
+            System.out.println("5) View all saved baskets");
+            System.out.println("6) Modify a saved basket");
+            System.out.println("0) Back to main menu");
+            int choice = readInt(scanner, "Your choice: ");
+            switch (choice) {
+                case 1:
+                    optimizeBasket(scanner);
+                    break;
+                case 2:
+                    saveBasket(scanner);
+                    break;
+                case 3:
+                    loadBasket(scanner);
+                    break;
+                case 4:
+                    clearBasket();
+                    break;
+                case 5:
+                    viewAllSavedBaskets();
+                    break;
+                case 6:
+                    modifySavedBasket(scanner);
+                    break;
+                case 0:
+                    done = true;
+                    break;
+                default:
+                    System.out.println("Invalid option.");
+            }
         }
     }
     
@@ -350,53 +350,69 @@ public class App {
     }
 
     private static void handleNewestDiscounts(Scanner scanner) {
-        String store = getDesiredStore(scanner);
-        if (store == null || store.isEmpty()) return;
-
-        newestDiscounts.showNewestDiscounts(store, currentDate);
+        boolean done = false;
+        while (!done) {
+            String store = getDesiredStore(scanner);
+            if (store == null || store.isEmpty()) return;
+            newestDiscounts.showNewestDiscounts(store, currentDate);
+            System.out.println("\nPress Enter to continue or type '0' to return to main menu.");
+            scanner.nextLine();
+            String input = scanner.nextLine();
+            if (input.trim().equals("0")) done = true;
+        }
     }
 
-    private static void handleBestDiscounts(Scanner scanner)
-    {
-        String store = getDesiredStore(scanner);
-        if (store == null || store.isEmpty()) return;
-
-        int numberOfOffers = readInt(scanner, "Enter number of offers:");
-
-        bestDiscounts.showBestDiscounts(store, currentDate, numberOfOffers);
+    private static void handleBestDiscounts(Scanner scanner) {
+        boolean done = false;
+        while (!done) {
+            String store = getDesiredStore(scanner);
+            if (store == null || store.isEmpty()) return;
+            int numberOfOffers = readInt(scanner, "Enter number of offers (0 to go back):");
+            if (numberOfOffers == 0) {
+                done = true;
+                continue;
+            }
+            bestDiscounts.showBestDiscounts(store, currentDate, numberOfOffers);
+            System.out.println("\nPress Enter to continue or type '0' to return to main menu.");
+            scanner.nextLine();
+            String input = scanner.nextLine();
+            if (input.trim().equals("0")) done = true;
+        }
     }
 
     private static void handlePriceAlerts(Scanner scanner) {
-        System.out.println("\n==== Price Alerts ====");
-        System.out.println("1) Create new alert");
-        System.out.println("2) View active alerts");
-        System.out.println("3) Check alerts");
-        System.out.println("4) Edit an alert");
-        System.out.println("5) Delete an alert");
-        System.out.println("0) Back to main menu");
-        
-        int choice = readInt(scanner, "Your choice: ");
-        
-        switch (choice) {
-            case 1:
-                createPriceAlert(scanner);
-                break;
-            case 2:
-                viewActiveAlerts();
-                break;
-            case 3:
-                checkAlerts(scanner);
-                break;
-            case 4:
-                editAlert(scanner);
-                break;
-            case 5:
-                deleteAlert(scanner);
-                break;
-            case 0:
-                return;
-            default:
-                System.out.println("Invalid option.");
+        boolean done = false;
+        while (!done) {
+            System.out.println("\n==== Price Alerts ====");
+            System.out.println("1) Create new alert");
+            System.out.println("2) View active alerts");
+            System.out.println("3) Check alerts");
+            System.out.println("4) Edit an alert");
+            System.out.println("5) Delete an alert");
+            System.out.println("0) Back to main menu");
+            int choice = readInt(scanner, "Your choice: ");
+            switch (choice) {
+                case 1:
+                    createPriceAlert(scanner);
+                    break;
+                case 2:
+                    viewActiveAlerts();
+                    break;
+                case 3:
+                    checkAlerts(scanner);
+                    break;
+                case 4:
+                    editAlert(scanner);
+                    break;
+                case 5:
+                    deleteAlert(scanner);
+                    break;
+                case 0:
+                    done = true;
+                    break;
+                default:
+                    System.out.println("Invalid option.");
+            }
         }
     }
 
@@ -456,28 +472,39 @@ public class App {
     }
 
     private static void handleValuePerUnit(Scanner scanner) {
-        scanner.nextLine();
-        System.out.print("Enter product ID: ");
-        String productId = scanner.nextLine().trim();
-
-        valuePerUnit.getBestValuePerUnit(productId, currentDate);
+        boolean done = false;
+        while (!done) {
+            scanner.nextLine();
+            System.out.print("Enter product ID (or 0 to go back): ");
+            String productId = scanner.nextLine().trim();
+            if (productId.equals("0")) {
+                done = true;
+                continue;
+            }
+            valuePerUnit.getBestValuePerUnit(productId, currentDate);
+            System.out.println("\nPress Enter to continue or type '0' to return to main menu.");
+            String input = scanner.nextLine();
+            if (input.trim().equals("0")) done = true;
+        }
     }
 
     private static void handleDataPointsAnalysis(Scanner scanner) {
-        System.out.println("\n==== Data Points Analysis ====");
-        System.out.println("1) Show data points for a specific product");
-        System.out.println("0) Back to main menu");
-
-        int choice = readInt(scanner, "Your choice: ");
-
-        switch (choice) {
-            case 1:
-                showDataPointsForProduct(scanner);
-                break;
-            case 0:
-                return;
-            default:
-                System.out.println("Invalid option.");
+        boolean done = false;
+        while (!done) {
+            System.out.println("\n==== Data Points Analysis ====");
+            System.out.println("1) Show data points for a specific product");
+            System.out.println("0) Back to main menu");
+            int choice = readInt(scanner, "Your choice: ");
+            switch (choice) {
+                case 1:
+                    showDataPointsForProduct(scanner);
+                    break;
+                case 0:
+                    done = true;
+                    break;
+                default:
+                    System.out.println("Invalid option.");
+            }
         }
     }
 
@@ -701,18 +728,16 @@ public class App {
         System.out.print("Enter new product ID (leave blank to keep current): ");
         String newProductId = scanner.nextLine().trim();
         if (!newProductId.isEmpty()) {
-            // If setters are missing, we need to add them in PriceAlert.java. If not possible, skip editing in-place.
-            // For now, let's check if we can use the constructor or just skip editing in-place.
-            // If the service has a remove method, use it; otherwise, this will update the in-memory list
-            System.out.println("Alert updated.");
+            alert.setProductId(newProductId);
+            System.out.println("Product ID updated.");
         }
         System.out.print("Enter new target price (leave blank to keep current): ");
         String priceInput = scanner.nextLine().trim();
         if (!priceInput.isEmpty()) {
             try {
                 double newPrice = Double.parseDouble(priceInput);
-                // If the service has a remove method, use it; otherwise, this will update the in-memory list
-                System.out.println("Alert updated.");
+                alert.setTargetPrice(newPrice);
+                System.out.println("Target price updated.");
             } catch (NumberFormatException e) {
                 System.out.println("Invalid price format. Keeping current price.");
             }
@@ -736,8 +761,8 @@ public class App {
             return;
         }
         PriceAlert alert = alerts.get(choice - 1);
-        alerts.remove(alert);
-        // If the service has a remove method, use it; otherwise, this will update the in-memory list
+        // Remove from repository and persist
+        priceAlertService.deleteAlert(alert.getProductId());
         System.out.println("Alert deleted.");
     }
 }

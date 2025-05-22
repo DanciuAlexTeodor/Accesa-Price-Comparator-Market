@@ -30,12 +30,18 @@ public class BasketOptimizer {
 
         double totalOriginalPrice = 0;
         double totalDiscountedPrice = 0;
-        Set<String> uniqueProducts = new HashSet<>(basketProductIds);
+        // Count occurrences of each product ID (quantity)
+        Map<String, Integer> productCounts = new LinkedHashMap<>();
+        for (String productId : basketProductIds) {
+            productCounts.put(productId, productCounts.getOrDefault(productId, 0) + 1);
+        }
         List<String> outputLines = new ArrayList<>();
 
         outputLines.add("Optimized Basket Split for " + date + ":\n");
 
-        for (String productId : uniqueProducts) {
+        for (Map.Entry<String, Integer> entry : productCounts.entrySet()) {
+            String productId = entry.getKey();
+            int quantity = entry.getValue();
             Product bestProduct = null;
             String bestStore = null;
             double bestFinalPrice = Double.MAX_VALUE;
@@ -60,14 +66,14 @@ public class BasketOptimizer {
             }
 
             if (bestProduct != null) {
-                String line = "- " + bestProduct.getName() + ": " + String.format("%.2f", bestFinalPrice)
+                String line = "- " + bestProduct.getName() + (quantity > 1 ? " x" + quantity : "") + ": " + String.format("%.2f", bestFinalPrice * quantity)
                         + " RON" + (appliedDiscount > 0 ? " (-" + appliedDiscount + "%)" : "");
 
                 storeToItems.computeIfAbsent(bestStore, k -> new ArrayList<>()).add(line);
-                storeToCost.put(bestStore, storeToCost.getOrDefault(bestStore, 0.0) + bestFinalPrice);
+                storeToCost.put(bestStore, storeToCost.getOrDefault(bestStore, 0.0) + bestFinalPrice * quantity);
 
-                totalOriginalPrice += bestProduct.getPrice();
-                totalDiscountedPrice += bestFinalPrice;
+                totalOriginalPrice += bestProduct.getPrice() * quantity;
+                totalDiscountedPrice += bestFinalPrice * quantity;
             } else {
                 outputLines.add("Product " + productId + " not found in any store.\n");
             }

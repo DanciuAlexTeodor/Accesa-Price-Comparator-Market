@@ -39,6 +39,14 @@ public class PriceAlert {
         this.isActive = isActive;
     }
 
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
+
+    public void setTargetPrice(double targetPrice) {
+        this.targetPrice = targetPrice;
+    }
+
     @Override
     public String toString() {
         return productId + ',' + productName + ',' + targetPrice + ',' + userId;

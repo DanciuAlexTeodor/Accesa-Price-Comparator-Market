@@ -32,14 +32,6 @@ public class PriceAlertService {
         List<PriceAlert> triggeredAlerts = new ArrayList<>();
         Map<String, List<Product>> storeProducts = marketDataRepository.getProductsForDate(date);
 
-        //display all products
-        for (String store : storeProducts.keySet()) {
-            System.out.println("Store: " + store);
-            for (Product product : storeProducts.get(store)) {
-                System.out.println(product);
-            }
-        }
-        
         
         for (PriceAlert alert : alertRepository.getActiveAlerts()) {
             double bestPrice = findBestPrice(alert.getProductId(), storeProducts, date);
@@ -75,7 +67,7 @@ public class PriceAlertService {
                 // Update best price if this one is lower
                 if (price < bestPrice) {
                     bestPrice = price;
-                    System.out.println("Found price " + price + " for " + product.getName() + " at " + store);
+                    //System.out.println("Found price " + price + " for " + product.getName() + " at " + store);
                 }
             }
         }
@@ -87,5 +79,8 @@ public class PriceAlertService {
         
         return bestPrice;
     }
-        
+
+    public void deleteAlert(String productId) {
+        alertRepository.deleteAlert(productId);
+    }
 }
