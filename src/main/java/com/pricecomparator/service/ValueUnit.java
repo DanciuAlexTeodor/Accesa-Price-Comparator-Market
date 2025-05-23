@@ -24,14 +24,15 @@ public class ValueUnit {
     }
 
    
-    // Main method to get the best value per unit for a product
+    // Main method
     public Map<String, Double> getBestValuePerUnit(String productId, String currentDate) {
+        // Get the data for the current day
         Map<String, List<Product>> storeProducts = marketDataRepository.getProductsForDate(currentDate);
         Map<String, Double> valueUnitPrices = new HashMap<>();
         Map<String, String> storeUnits = new HashMap<>(); // Store -> unit (kg/l)
         String productName = "";
 
-        // Try to find the product name by ID
+        // find the product name by ID, because the same product have multiple ID's in different CSV
         for (String store : storeProducts.keySet()) {
             for (Product product : storeProducts.get(store)) {
                 if (product.getId().equals(productId)) {
@@ -43,13 +44,14 @@ public class ValueUnit {
         System.out.println("Value comparison for " + productName);
         
 
-        // Go through all stores and calculate value per unit
+        //[] Go through all stores and calculate value per unit
         for (String store : storeProducts.keySet()) {
             for (Product product : storeProducts.get(store)) {
                 if (product.getName().equals(productName)) {
                     double valueUnitPrice = calculateValueUnitPrice(product);
                     valueUnitPrices.put(store, valueUnitPrice);
                     
+                    //[] Handles unit conversions (e.g., grams to kg).
                     String unit = product.getUnit();
                     String numeUnitate = "";
                     if (WEIGHT_SMALL_UNITS.contains(unit) || WEIGHT_LARGE_UNITS.contains(unit)) {

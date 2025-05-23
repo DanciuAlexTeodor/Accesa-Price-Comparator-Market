@@ -22,15 +22,24 @@ public class BasketOptimizer {
         this.marketDataRepository = marketDataRepository;
     }
 
+    /**
+     * For each product, finds the store with the lowest price (considering discounts),
+     * and outputs a shopping list split by store, with subtotals and total savings.
+     *
+     * @param basketProductIds List of product IDs (with repetitions for quantity)
+     * @param date The date for which to optimize prices
+     */
     public void optimizeBasketSplit(List<String> basketProductIds, String date) {
+        // get data by the given date
         Map<String, List<Product>> storeProducts = marketDataRepository.getProductsForDate(date);
 
+        // Maps to accumulate shopping list lines and subtotals per store
         Map<String, List<String>> storeToItems = new HashMap<>();
         Map<String, Double> storeToCost = new HashMap<>();
 
         double totalOriginalPrice = 0;
         double totalDiscountedPrice = 0;
-        // Count occurrences of each product ID (quantity)
+        //[] Uses a map to count product quantities.
         Map<String, Integer> productCounts = new LinkedHashMap<>();
         for (String productId : basketProductIds) {
             productCounts.put(productId, productCounts.getOrDefault(productId, 0) + 1);
@@ -39,6 +48,7 @@ public class BasketOptimizer {
 
         outputLines.add("Optimized Basket Split for " + date + ":\n");
 
+        //[] For each unique product 
         for (Map.Entry<String, Integer> entry : productCounts.entrySet()) {
             String productId = entry.getKey();
             int quantity = entry.getValue();
@@ -47,6 +57,7 @@ public class BasketOptimizer {
             double bestFinalPrice = Double.MAX_VALUE;
             int appliedDiscount = 0;
 
+            //[] Search all stores for the best price (with discount) 
             for (String store : storeProducts.keySet()) {
                 Product product = marketDataRepository.getProduct(store, productId);
                 if (product == null) continue;
@@ -57,6 +68,7 @@ public class BasketOptimizer {
 
                 double discountedPrice = price * (1 - discountPercent / 100.0);
 
+                //[] Track the best (lowest) price and store
                 if (discountedPrice < bestFinalPrice) {
                     bestProduct = product;
                     bestStore = store;
@@ -66,12 +78,15 @@ public class BasketOptimizer {
             }
 
             if (bestProduct != null) {
+                // Format the shopping list line for this product and store
                 String line = "- " + bestProduct.getName() + (quantity > 1 ? " x" + quantity : "") + ": " + String.format("%.2f", bestFinalPrice * quantity)
                         + " RON" + (appliedDiscount > 0 ? " (-" + appliedDiscount + "%)" : "");
 
+                // Add to the store's shopping list and subtotal
                 storeToItems.computeIfAbsent(bestStore, k -> new ArrayList<>()).add(line);
                 storeToCost.put(bestStore, storeToCost.getOrDefault(bestStore, 0.0) + bestFinalPrice * quantity);
 
+                //[] Accumulate totals for original and discounted prices
                 totalOriginalPrice += bestProduct.getPrice() * quantity;
                 totalDiscountedPrice += bestFinalPrice * quantity;
             } else {
@@ -79,17 +94,20 @@ public class BasketOptimizer {
             }
         }
 
+        //[] Output the shopping list
         for (String store : storeToItems.keySet()) {
             outputLines.add("\n" + capitalize(store) + " Shopping List:");
             outputLines.addAll(storeToItems.get(store));
             outputLines.add("Subtotal: " + String.format("%.2f", storeToCost.get(store)) + " RON\n");
         }
 
+        // Output [] totals and savings
         double savings = totalOriginalPrice - totalDiscountedPrice;
         outputLines.add("Original total (no discounts): " + String.format("%.2f", totalOriginalPrice) + " RON");
         outputLines.add("Optimized total: " + String.format("%.2f", totalDiscountedPrice) + " RON");
         outputLines.add("Total money saved: " + String.format("%.2f", savings) + " RON");
 
+        // Write the result to a file and print the location
         writeOutputToFile("output/optimized_basket_" + date + ".txt", outputLines);
         System.out.println("Result saved to: output/optimized_basket_" + date + ".txt");
     }

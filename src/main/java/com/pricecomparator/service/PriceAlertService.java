@@ -30,15 +30,17 @@ public class PriceAlertService {
 
     public List<PriceAlert> checkAlerts(String date) {
         List<PriceAlert> triggeredAlerts = new ArrayList<>();
+        // Getting the products for the current day
         Map<String, List<Product>> storeProducts = marketDataRepository.getProductsForDate(date);
 
         
         for (PriceAlert alert : alertRepository.getActiveAlerts()) {
+            // For each active alert I am searching for the best price I can find
             double bestPrice = findBestPrice(alert.getProductId(), storeProducts, date);
             
             if (bestPrice <= alert.getTargetPrice()) {
                 triggeredAlerts.add(alert);
-                System.out.println("⚠️ PRICE ALERT: " + alert.getProductName() + 
+                System.out.println("PRICE ALERT: " + alert.getProductName() + 
                                   " is now available at " + bestPrice + 
                                   " (target: " + alert.getTargetPrice() + ")");
             }

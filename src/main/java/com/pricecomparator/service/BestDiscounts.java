@@ -17,10 +17,11 @@ public class BestDiscounts {
             store = store.substring(0, 1).toUpperCase() + store.substring(1).toLowerCase();
         }
         
+        //[] Get the discounts
         Map<String, List<Discount>> storeDiscounts = marketDataRepository.getValidDiscountsForDate(date);
         
         if (store.equals("All stores")) {
-            // Handle all stores - merge all discounts
+            // /* Handle all stores - merge all discounts
             List<Discount> allDiscounts = new ArrayList<>();
             storeDiscounts.forEach((storeName, discounts) -> {
                 allDiscounts.addAll(discounts);
@@ -31,7 +32,7 @@ public class BestDiscounts {
                 return;
             }
             
-            // Sort discounts by discount percentage in descending order
+            //[] Sort discounts by discount percentage in descending order
             allDiscounts.sort((d1, d2) -> Integer.compare(d2.getDiscountPercent(), d1.getDiscountPercent()));
             
             System.out.println("Top " + numberOfOffers + " discounts across all stores on " + date + ":");
@@ -50,6 +51,7 @@ public class BestDiscounts {
             // Sort discounts by discount percentage in descending order
             discounts.sort((d1, d2) -> Integer.compare(d2.getDiscountPercent(), d1.getDiscountPercent()));
             
+            //[] Output the result
             System.out.println("Top " + numberOfOffers + " discounts for " + store + " on " + date + ":");
             for (int i = 0; i < Math.min(numberOfOffers, discounts.size()); i++) {
                 System.out.println(discounts.get(i));
